@@ -5,6 +5,7 @@ import { BASE_URL } from "src/base_url";
 import { toast } from "react-toastify";
 import ImageListing from "./ImageListing";
 import SmallLoader from "../PageChange/SmallLoader";
+import { useRouter } from "next/router";
 
 function GalleryModal({
   setModalVisible,
@@ -13,7 +14,11 @@ function GalleryModal({
   setSelectedImages,
   fetchedSingleProduct,
   userRole,
+  setImageLoading,
 }) {
+  // router
+  const router = useRouter();
+
   // states
   const [tab, setTab] = useState("browse");
   const [imageFiles, setImageFiles] = useState([]);
@@ -53,6 +58,7 @@ function GalleryModal({
 
   // handle get images for specific seller
   const getImagesforGallery = (sellerId) => {
+    setImageLoading(true);
     axios
       .get(
         `${BASE_URL}/api/image-galleries/${sellerId}?populate[0]=all_media`,
@@ -74,6 +80,9 @@ function GalleryModal({
       })
       .catch((error) => {
         toast.error(error?.message, { autoClose: 2000 });
+      })
+      .finally(() => {
+        setImageLoading(false);
       });
   };
 
@@ -82,10 +91,35 @@ function GalleryModal({
     axios
       .get(`${BASE_URL}/api/sellers/${userID}?populate[0]=gallery`, config)
       .then((res) => {
-        const sellerID = res?.data?.data?.attributes?.gallery?.data?.id;
+        // creating gallery if does not exist
+        if (res?.data?.data?.attributes?.gallery?.data == null) {
+          axios
+            .post(
+              `${BASE_URL}/api/image-galleries`,
+              {
+                data: {
+                  seller: userID,
+                },
+              },
+              config
+            )
+            .then((galRes) => {
+              setgalleryID(galRes?.data?.data?.id);
+              getImagesforGallery(galRes?.data?.data?.id);
+            })
+            .catch((galError) => {
+              toast.error(galError?.response?.data?.error?.message, {
+                autoClose: 1800,
+                pauseOnHover: true,
+              });
+            });
+        } else {
+          // using existing gallery
 
-        setgalleryID(sellerID);
-        getImagesforGallery(sellerID);
+          const sellerID = res?.data?.data?.attributes?.gallery?.data?.id;
+          setgalleryID(sellerID);
+          getImagesforGallery(sellerID);
+        }
       })
       .catch((error) => {
         toast.error(error?.message, { autoClose: 2000 });
@@ -93,12 +127,12 @@ function GalleryModal({
   };
 
   // handle delete Image from URL (pushing to array)
-  const handleDeleteImagefromURL = (id) => {
-    deleteImages.push(id);
+  // const handleDeleteImagefromURL = (id) => {
+  //   deleteImages.push(id);
 
-    const filArray = browseImageURL.filter((x) => x?.id != id);
-    setbrowseImageURL(filArray);
-  };
+  //   const filArray = browseImageURL.filter((x) => x?.id != id);
+  //   setbrowseImageURL(filArray);
+  // };
 
   useEffect(() => {
     getGalleryId();
@@ -131,25 +165,25 @@ function GalleryModal({
   };
 
   // image delete
-  const handleImageDelete = () => {
-    setloading(true);
-    for (let index = 0; index < deleteImages.length; index++) {
-      axios
-        .delete(`${BASE_URL}/api/upload/files/${deleteImages[index]}`, {
-          headers: {
-            Authorization: `Bearer ` + userData?.jwt,
-          },
-        })
-        .then((res) => {
-          if (deleteImages[deleteImages.length - 1] == deleteImages[index]) {
-            toast.success("Images Deleted Successfully");
-          }
-        })
-        .catch((error) => {
-          toast.error(error.message, { autoClose: 2000 });
-        });
-    }
-  };
+  // const handleImageDelete = () => {
+  //   setloading(true);
+  //   for (let index = 0; index < deleteImages.length; index++) {
+  //     axios
+  //       .delete(`${BASE_URL}/api/upload/files/${deleteImages[index]}`, {
+  //         headers: {
+  //           Authorization: `Bearer ` + userData?.jwt,
+  //         },
+  //       })
+  //       .then((res) => {
+  //         if (deleteImages[deleteImages.length - 1] == deleteImages[index]) {
+  //           toast.success("Images Deleted Successfully");
+  //         }
+  //       })
+  //       .catch((error) => {
+  //         toast.error(error.message, { autoClose: 2000 });
+  //       });
+  //   }
+  // };
 
   return (
     <div
@@ -159,7 +193,7 @@ function GalleryModal({
     >
       <div className=" flex flex-col relative bg-white p-5 w-full md:w-10/12 h-5/5 overflow-y-auto">
         <div className="flex flex-row justify-end space-x-3 sm:space-x-6 ">
-          {deleteImages.length > 0 && (
+          {/* {deleteImages.length > 0 && (
             <div
               className=" bg-red-600 text-white text-sm sm:text-md w-24 flex justify-center items-center hover:scale-105 duration-150  py-1 mb-2 rounded cursor-pointer uppercase"
               onClick={() => {
@@ -176,7 +210,7 @@ function GalleryModal({
                 `delete ( ${deleteImages.length} )`
               )}
             </div>
-          )}
+          )} */}
           <div
             className=" bg-black text-white text-sm sm:text-md w-16 flex justify-center items-center hover:scale-105 duration-150 px-2 py-1 mb-2 rounded cursor-pointer uppercase"
             onClick={() => {
@@ -241,7 +275,7 @@ function GalleryModal({
             <div className="p-4 rounded-lg bg-gray-100">
               <ImageListing
                 data={browseImageURL}
-                handleDeleteImagefromURL={handleDeleteImagefromURL}
+                // handleDeleteImagefromURL={handleDeleteImagefromURL}
                 selectedImages={selectedImages}
                 setSelectedImages={setSelectedImages}
               />
