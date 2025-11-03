@@ -16,9 +16,7 @@ echo "🍎 Cleaning iOS DerivedData..."
 rm -rf ~/Library/Developer/Xcode/DerivedData/*
 
 
-# --- macOS Cache Cleanup ---
-echo "🧺 Cleaning general caches..."
-rm -rf ~/Library/Caches/*
+
 
 echo "✅ Cleanup complete! All Android & iOS build artifacts removed."
 
