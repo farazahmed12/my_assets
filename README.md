@@ -25,6 +25,12 @@ echo "✅ Cleanup complete! All Android & iOS build artifacts removed."
 
 -----------
 
+FREE PUBLIC API's for geocoding
+
+https://nominatim.openstreetmap.org/
+
+
+
 nano ~/rn-clean.sh
 
 chmod +x ~/rn-clean.sh
